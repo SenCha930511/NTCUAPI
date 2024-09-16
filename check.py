@@ -157,6 +157,58 @@ def calculate_and_print_credits(all_courses_file, cs_requirements_file, general_
             for course in repeated_courses:
                 output += f"    {course}\n"
 
+        output += "\n目前可參考選擇課程：\n"
+    
+        # 系課程
+        for category, data in credits["專門課程"].items():
+            if category != "系專業模組課程":
+                missing_credits = data["要求"] - data["已修"]
+                if missing_credits > 0:
+                    output += f"\n{category}(缺少 {missing_credits} 學分)\n"
+                    output += "可修習課程為:\n"
+                    for course in cs_courses.get(category, {}).get("必修", []):
+                        if course["科目名稱"] not in all_courses["courses"]:
+                            output += f"* {course['科目名稱']} (必修)\n"
+            else:
+                for module, module_data in data.items():
+                    missing_credits = module_data["要求"] - module_data["已修"]
+                    if missing_credits > 0:
+                        output += f"\n{module}(缺少 {missing_credits} 學分)\n"
+                        output += "可修習課程為:\n"
+                        for course in cs_courses["系專業模組課程"][module].get("選修", []):
+                            if course["科目名稱"] not in all_courses["courses"]:
+                                output += f"* {course['科目名稱']} (選修)\n"
+        
+        # 通識課程
+        for category, data in credits["通識課程"].items():
+            if category == "語文通識":
+                missing_credits = data["要求"] - data["已修"]
+                if missing_credits > 0:
+                    output += f"\n{category}(缺少 {missing_credits} 學分)\n"
+                    output += "可修習課程為:\n"
+                    for course in general_requirements["通識課程"]["語文通識課程"]:
+                        if course["科目名稱"] not in all_courses["courses"]:
+                            output += f"* {course['科目名稱']} (必修)\n"
+            else:
+                total_missing = (data["核心要求"] - data["核心"]) + (data["選修要求"] - data["選修"])
+                if total_missing > 0:
+                    output += f"\n{category}(缺少 {total_missing} 學分)\n"
+                    output += "可修習課程為:\n"
+                    for sub_category in ["核心課程", "選修課程"]:
+                        for course in general_requirements["通識課程"][category][sub_category]:
+                            if course["科目名稱"] not in all_courses["courses"]:
+                                output += f"* {course['科目名稱']} ({'核心' if sub_category == '核心課程' else '選修'})\n"
+
+        # 处理共同课程
+        for category, data in credits["共同課程"].items():
+            missing_credits = data["要求"] - data["已修"]
+            if missing_credits > 0:
+                output += f"\n{category}(缺少 {missing_credits} 學分)\n"
+                output += "可修習課程為:\n"
+                for course in general_requirements["共同課程"][category]:
+                    if course["科目名稱"] not in all_courses["courses"]:
+                        output += f"* {course['科目名稱']} ({'必修' if '必修' in category else '選修'})\n"
+
         return output
 
     try:
