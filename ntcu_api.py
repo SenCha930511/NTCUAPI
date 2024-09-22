@@ -20,11 +20,11 @@ class Ntcu_api():
         :param account: str - 使用者帳號
         :param password: str - 使用者密碼
         """
-        self.account: str = account
+        self.__account: str = account
         # 隨機選擇學校伺服器域名
-        self.domain: str = random.choice(["https://ecsa.ntcu.edu.tw", "https://ecsb.ntcu.edu.tw"])
+        self.__domain: str = random.choice(["https://ecsa.ntcu.edu.tw", "https://ecsb.ntcu.edu.tw"])
         # 登入並建立會話
-        self.session: requests.Session = self.__getSession(account, password)  
+        self.__session: requests.Session = self.__getSession(account, password)  
 
 
     def __getSession(self, account: str, password: str) -> requests.Session:
@@ -48,7 +48,7 @@ class Ntcu_api():
         """
         session = requests.Session()
         # 請求登入頁面以獲取 CSRF token
-        page_response = session.get(self.domain, verify=False)
+        page_response = session.get(self.__domain, verify=False)
 
         # 使用 BeautifulSoup 分析 HTML，提取 CSRF token
         soup = BeautifulSoup(page_response.text, "html.parser")
@@ -69,7 +69,7 @@ class Ntcu_api():
         :param form_data: Dict[str, str] - 表單資料
         :return: Tuple[requests.Session, Dict[str, str]] - 更新的會話對象和表單資料
         """
-        check_url: str = self.domain + "/HttpRequest/Get_Check_Code.ashx"
+        check_url: str = self.__domain + "/HttpRequest/Get_Check_Code.ashx"
         # 向伺服器請求驗證碼資料
         check_code_data: Dict = session.post(check_url, data=form_data, verify=False).json()
 
@@ -98,7 +98,7 @@ class Ntcu_api():
         form_data["User_Password"] = password
 
         # 發送登入請求
-        login_url: str = self.domain + "/login.aspx"
+        login_url: str = self.__domain + "/login.aspx"
         login_response: Dict = session.post(login_url, data=form_data, verify=False).json()
 
         return session
@@ -106,11 +106,11 @@ class Ntcu_api():
 
     def __getClassOf(self) -> Tuple[int, int]:
         """
-        獲取學生的學年範圍（如 111 到 113）。
+        獲取學生的學年範圍（如大一到大四）。
         :return: Tuple[int, int] - 第一學年和最後學年
         """
-        url: str = self.domain + "/STDWEB/Sel_Student.aspx"
-        response: str = self.session.get(url, verify=False).text
+        url: str = self.__domain + "/STDWEB/Sel_Student.aspx"
+        response: str = self.__session.get(url, verify=False).text
         soup = BeautifulSoup(response, "html.parser")
         
         # 解析學年選擇框中的年份資料
@@ -129,38 +129,38 @@ class Ntcu_api():
         :param avg: bool - 如果為 True，則取得平均成績資料；否則取得所有單科成績資料。
         :return: str - 以 XML 格式返回的成績資料。
         """
-        url: str = self.domain + "/HttpRequest/STDWCore.aspx"
+        url: str = self.__domain + "/HttpRequest/STDWCore.aspx"
         form_data: Dict[str, str] = (
-            {"ModuleName": "GetStdYearAvg", "StdNo": self.account, "responseXML": "true"}
+            {"ModuleName": "GetStdYearAvg", "StdNo": self.__account, "responseXML": "true"}
             if avg
-            else {"ModuleName": "GetStdYearScore", "StdNo": self.account, "responseXML": "true"}
+            else {"ModuleName": "GetStdYearScore", "StdNo": self.__account, "responseXML": "true", "Avg": "true"}
         )
-        response: requests.Response = self.session.post(url, data=form_data, verify=False)
+        response: requests.Response = self.__session.post(url, data=form_data, verify=False)
 
         return response.text
 
-    
     def getSpeSemCourses(self, year: int, semester: int) -> List[str]:
         """
         獲取指定學年和學期的課程。
         :param year: int - 學年
-        :param semester: int - 學期 (1, 2, 3 或 4)
+        :param semester: int - 學期 (1 或 2)
         :return: List[str] - 指定學期課程列表
         """
-        url: str = self.domain + "/STDWEB/Sel_Student.aspx"
+        url: str = self.__domain + "/STDWEB/Sel_Student.aspx"
         form_data: Dict[str, int] = {
             "ThisYear": year,
             "ThisTeam": semester
         }
-        response: str = self.session.post(url, data=form_data, verify=False).text
+        response: str = self.__session.post(url, data=form_data, verify=False).text
         soup = BeautifulSoup(response, "html.parser")
 
         # 提取課程名稱
         a_tags = soup.find_all("a")
         courses: List[str] = []
-        courses.extend(a.get_text() for a in a_tags if "ConnectCos_Short" in a.get("href"))
+        for a in a_tags:
+            if "ConnectCos_Short" in a.get("href"):
+                courses.append(a.get_text())
 
-        # 去除重複的課程
         return list(dict.fromkeys(courses))
 
 
@@ -173,7 +173,12 @@ class Ntcu_api():
         first_year, last_year = self.__getClassOf()
 
         # 遍歷每個學期並獲取課程
-        courses += [self.getSpeSemCourses(year, semester) for year in range(first_year, last_year + 1) for semester in range(1, 3)]
+        from itertools import chain
+
+        courses = list(chain.from_iterable(self.getSpeSemCourses(year, semester) 
+                                            for year in range(first_year, last_year + 1) 
+                                            for semester in range(1, 3) 
+                                            if self.getSpeSemCourses(year, semester)))
 
         return courses
     
