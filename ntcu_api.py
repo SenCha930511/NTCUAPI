@@ -139,6 +139,7 @@ class Ntcu_api():
 
         return response.text
 
+    
     def getSpeSemCourses(self, year: int, semester: int) -> List[str]:
         """
         獲取指定學年和學期的課程。
