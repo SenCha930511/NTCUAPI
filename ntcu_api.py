@@ -138,7 +138,6 @@ class Ntcu_api():
         response: requests.Response = self.session.post(url, data=form_data, verify=False)
 
         return response.text
-    
 
     def getSpeSemCourses(self, year: int, semester: int) -> List[str]:
         """
