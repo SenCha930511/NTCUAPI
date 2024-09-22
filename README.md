@@ -9,7 +9,7 @@ NTCU API 提供與學校網站進行互動的接口，用於獲取課程、成�
 ## 安裝
 
 ```bash
-pip install requests beautifulsoup4
+pip install requests beautifulsoup4 ddddocr
 ```
 
 ## 使用方法
