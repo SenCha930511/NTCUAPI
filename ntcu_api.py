@@ -140,26 +140,6 @@ class Ntcu_api():
         return response.text
     
 
-    def getThisSemCourses(self) -> List[str]:
-        """
-        獲取當前學期的所有課程。
-        :return: List[str] - 當前學期課程列表
-        """
-        url: str = self.domain + "/STDWEB/Sel_Student.aspx"
-        response: str = self.session.get(url, verify=False).text
-        soup = BeautifulSoup(response, "html.parser")
-
-        # 提取課程名稱
-        a_tags = soup.find_all("a")
-        courses: List[str] = []
-        for a in a_tags:
-            if "ConnectCos_Short" in a.get("href"):
-                courses.append(a.get_text())
-
-        # 移除重複的課程名稱
-        return list(dict.fromkeys(courses))
-    
-
     def getSpeSemCourses(self, year: int, semester: int) -> List[str]:
         """
         獲取指定學年和學期的課程。
