@@ -26,6 +26,7 @@ class Ntcu_api():
         # 登入並建立會話
         self.session: requests.Session = self.__getSession(account, password)  
 
+
     def __getSession(self, account: str, password: str) -> requests.Session:
         """
         建立與學校伺服器的會話，並完成登入。
@@ -39,6 +40,7 @@ class Ntcu_api():
         session = self.__login(session, form_data, account, password)
         return session    
     
+
     def __getCrsf(self) -> Tuple[requests.Session, Dict[str, str]]:
         """
         從學校網站獲取 CSRF token。
@@ -59,6 +61,7 @@ class Ntcu_api():
 
         return session, form_data
 
+
     def __getCheckCodeData(self, session: requests.Session, form_data: Dict[str, str]) -> Tuple[requests.Session, Dict[str, str]]:
         """
         獲取驗證碼圖片並通過 recaptchaByPass 驗證。
@@ -77,6 +80,7 @@ class Ntcu_api():
         form_data["SHA1_EnCode"] = check_code_data[0]["SHA1_EnCode"]
 
         return session, form_data
+
 
     def __login(self, session: requests.Session, form_data: Dict[str, str], account: str, password: str) -> requests.Session:
         """
@@ -99,6 +103,7 @@ class Ntcu_api():
 
         return session
     
+
     def __getClassOf(self) -> Tuple[int, int]:
         """
         獲取學生的學年範圍（如大一到大四）。
@@ -116,17 +121,25 @@ class Ntcu_api():
 
         return first_year, last_year
 
-    def __getRawGrdData(self) -> str:
+
+    def __getRawGrd(self, avg: bool = False) -> str:
         """
         取得原始的成績資料。
-        :return: str - XML 格式的成績資料
+
+        :param avg: bool - 如果為 True，則取得平均成績資料；否則取得所有單科成績資料。
+        :return: str - 以 XML 格式返回的成績資料。
         """
         url: str = self.domain + "/HttpRequest/STDWCore.aspx"
-        form_data: Dict[str, str] = {"ModuleName": "GetStdYearScore", "StdNo": self.account, "responseXML": "true"}
+        form_data: Dict[str, str] = (
+            {"ModuleName": "GetStdYearAvg", "StdNo": self.account, "responseXML": "true"}
+            if avg
+            else {"ModuleName": "GetStdYearScore", "StdNo": self.account, "responseXML": "true", "Avg": "true"}
+        )
         response: requests.Response = self.session.post(url, data=form_data, verify=False)
 
         return response.text
     
+
     def getThisSemCourses(self) -> List[str]:
         """
         獲取當前學期的所有課程。
@@ -146,6 +159,7 @@ class Ntcu_api():
         # 移除重複的課程名稱
         return list(dict.fromkeys(courses))
     
+
     def getSpeSemCourses(self, year: int, semester: int) -> List[str]:
         """
         獲取指定學年和學期的課程。
@@ -169,7 +183,8 @@ class Ntcu_api():
                 courses.append(a.get_text())
 
         return list(dict.fromkeys(courses))
-    
+
+
     def getAllCourses(self) -> List[str]:
         """
         獲取所有學年和學期的課程。
@@ -185,12 +200,13 @@ class Ntcu_api():
 
         return courses
     
+
     def getAllGrd(self) -> List[Dict[str, str]]:
         """
         獲取所有學期的成績資料。
         :return: List[Dict[str, str]] - 成績資料列表，每筆資料包含課程名稱、選修類型、成績
         """
-        raw_data: str = self.__getRawGrdData()
+        raw_data: str = self.__getRawGrd(avg = False)
         root = ET.fromstring(raw_data)
 
         # 解析成績資料
@@ -203,3 +219,23 @@ class Ntcu_api():
         } for item in root.findall("DataItem"))
 
         return grds
+    
+
+    def getAvgGrd(self) -> List[Dict[str, str]]:
+        """
+        獲取每個學期平均的成績資料。
+        :return: List[Dict[str, str]] - 成績資料列表，每筆資料包含年分、學期、平均成績、總學分
+        """
+        raw_data: str = self.__getRawGrd(avg = True)
+        root = ET.fromstring(raw_data)
+
+        # 解析成績資料
+        avg_grds: List[Dict[str, str]] = []
+        avg_grds.extend({
+            "years": item.find("years").text,
+            "term": item.find("term").text,
+            "avg": item.find("Grd_Avg").text,
+            "all_credit": item.find("All_Credit").text
+        } for item in root.findall("DataItem"))
+
+        return avg_grds
