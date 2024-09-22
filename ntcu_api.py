@@ -133,7 +133,7 @@ class Ntcu_api():
         form_data: Dict[str, str] = (
             {"ModuleName": "GetStdYearAvg", "StdNo": self.account, "responseXML": "true"}
             if avg
-            else {"ModuleName": "GetStdYearScore", "StdNo": self.account, "responseXML": "true", "Avg": "true"}
+            else {"ModuleName": "GetStdYearScore", "StdNo": self.account, "responseXML": "true"}
         )
         response: requests.Response = self.session.post(url, data=form_data, verify=False)
 
@@ -159,6 +159,7 @@ class Ntcu_api():
         courses: List[str] = []
         courses.extend(a.get_text() for a in a_tags if "ConnectCos_Short" in a.get("href"))
 
+        # 去除重複的課程
         return list(dict.fromkeys(courses))
 
 
