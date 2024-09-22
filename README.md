@@ -1,9 +1,9 @@
 # NTCU API
 
-NTCU API 提供與學校網站進行互動的接口，用於獲取課程、成績等資料。
-
 [![forthebadge](https://forthebadge.com/images/badges/made-with-python.svg)](https://forthebadge.com)
 [![forthebadge](https://forthebadge.com/images/badges/powered-by-black-magic.svg)](https://forthebadge.com)
+
+NTCU API 提供與學校網站進行互動的接口，用於獲取課程、成績等資料。
 
 ## 簡介
 
