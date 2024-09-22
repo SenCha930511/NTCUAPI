@@ -157,9 +157,7 @@ class Ntcu_api():
         # 提取課程名稱
         a_tags = soup.find_all("a")
         courses: List[str] = []
-        for a in a_tags:
-            if "ConnectCos_Short" in a.get("href"):
-                courses.append(a.get_text())
+        courses.extend(a.get_text() for a in a_tags if "ConnectCos_Short" in a.get("href"))
 
         return list(dict.fromkeys(courses))
 
@@ -173,9 +171,7 @@ class Ntcu_api():
         first_year, last_year = self.__getClassOf()
 
         # 遍歷每個學期並獲取課程
-        for year in range(first_year, last_year + 1):
-            for semester in range(1, 3):
-                courses += self.getSpeSemCourses(year, semester)
+        courses += [self.getSpeSemCourses(year, semester) for year in range(first_year, last_year + 1) for semester in range(1, 3)]
 
         return courses
     
