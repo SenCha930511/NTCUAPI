@@ -2,6 +2,9 @@
 
 NTCU API 提供與學校網站進行互動的接口，用於獲取課程、成績等資料。
 
+[![forthebadge](https://forthebadge.com/images/badges/made-with-python.svg)](https://forthebadge.com)
+[![forthebadge](https://forthebadge.com/images/badges/powered-by-black-magic.svg)](https://forthebadge.com)
+
 ## 簡介
 
 此項目是用於與國立臺中教育大學 (NTCU) 的網站進行互動的 Python API，能夠獲取學生的課程和成績等資訊。
