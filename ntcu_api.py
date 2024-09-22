@@ -188,7 +188,7 @@ class Ntcu_api():
     def getAllGrd(self) -> List[Dict[str, str]]:
         """
         獲取所有學期的成績資料。
-        :return: List[Dict[str, str, str]] - 成績資料列表，每筆資料包含課程名稱、選修類型、成績
+        :return: List[Dict[str, str]] - 成績資料列表，每筆資料包含課程名稱、選修類型、成績
         """
         raw_data: str = self.__getRawGrdData()
         root = ET.fromstring(raw_data)
@@ -196,9 +196,10 @@ class Ntcu_api():
         # 解析成績資料
         grds: List[Dict[str, str]] = []
         grds.extend({
-            "課程名稱": i.get("課程名稱"),
-            "選修類型": i.get("選修類型"),
-            "成績": i.get("成績")
-        } for i in root.iter("dt"))
+            "course_name": item.find("Cos_Name").text,
+            "selkind": item.find("SelKind_Name").text,
+            "score": item.find("Score").text,
+            "credit": item.find("Credit").text
+        } for item in root.findall("DataItem"))
 
         return grds
