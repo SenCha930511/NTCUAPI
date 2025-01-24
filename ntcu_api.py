@@ -106,7 +106,7 @@ class Ntcu_api():
 
     def __getClassOf(self) -> Tuple[int, int]:
         """
-        獲取學生的學年範圍（如大一到大四）。
+        獲取學生的學年範圍（如 111 到 113）。
         :return: Tuple[int, int] - 第一學年和最後學年
         """
         url: str = self.__domain + "/STDWEB/Sel_Student.aspx"
@@ -143,7 +143,7 @@ class Ntcu_api():
         """
         獲取指定學年和學期的課程。
         :param year: int - 學年
-        :param semester: int - 學期 (1 或 2)
+        :param semester: int - 學期 (1, 2, 3, 或 4)
         :return: List[str] - 指定學期課程列表
         """
         url: str = self.__domain + "/STDWEB/Sel_Student.aspx"
@@ -161,6 +161,7 @@ class Ntcu_api():
             if "ConnectCos_Short" in a.get("href"):
                 courses.append(a.get_text())
 
+        # 移除重複的課程
         return list(dict.fromkeys(courses))
 
 
